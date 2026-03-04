@@ -4,8 +4,9 @@
 
 #include <string>
 #include <string_view>
+#include <filesystem>
 
-INTERFACE(File, Context)
+INTERFACE(File, Object)
 	friend class Directory;
 
 	void writeLine(std::string_view line);

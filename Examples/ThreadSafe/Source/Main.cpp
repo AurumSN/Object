@@ -86,7 +86,7 @@ int main()
 		b.join();
 		auto end = std::chrono::high_resolution_clock::now();
 
-		std::cout << "Got:\t\t" << c.get() << "\nExpected:\t" << Value << "\nOr: 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
+		std::cout << "Got:\t\t" << c.get() << "\nExpected:\t" << Value << " or 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
 	}
 
 	std::cout << "\nCounterGood" << std::endl;
@@ -102,7 +102,7 @@ int main()
 		b.join();
 		auto end = std::chrono::high_resolution_clock::now();
 
-		std::cout << "Got:\t\t" << c.get() << "\nExpected:\t" << Value << "\nOr: 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
+		std::cout << "Got:\t\t" << c.get() << "\nExpected:\t" << Value << " or 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
 	}
 
 	std::cout << "\nCounterBadThreadSafe" << std::endl;
@@ -118,7 +118,7 @@ int main()
 		b.join();
 		auto end = std::chrono::high_resolution_clock::now();
 
-		std::cout << "Got:\t\t" << c.get() << "\nExpected:\t" << Value << "\nOr: 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
+		std::cout << "Got:\t\t" << c.get() << "\nExpected:\t" << Value << " or 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
 	}
 
 	std::cout << "\nCounterGoodThreadSafe" << std::endl;
@@ -134,7 +134,7 @@ int main()
 		b.join();
 		auto end = std::chrono::high_resolution_clock::now();
 
-		std::cout << "Got:\t\t" << c.get() << "\nExpected:\t" << Value << "\nOr: 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
+		std::cout << "Got:\t\t" << c.get() << "\nExpected:\t" << Value << " or 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
 	}
 
 	std::cout << "\nCounterGoodThreadSafe2" << std::endl;
@@ -150,7 +150,7 @@ int main()
 		b.join();
 		auto end = std::chrono::high_resolution_clock::now();
 
-		std::cout << "Got:\t\t" << c.get() << "\nExpected:\t" << Value << "\nOr: 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
+		std::cout << "Got:\t\t" << c.get() << "\nExpected:\t" << Value << " or 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
 	}
 
 	std::cout << "\nRAW" << std::endl;
@@ -166,6 +166,6 @@ int main()
 		b.join();
 		auto end = std::chrono::high_resolution_clock::now();
 
-		std::cout << "Got:\t\t" << c << "\nExpected:\t" << Value << "\nOr: 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
+		std::cout << "Got:\t\t" << c << "\nExpected:\t" << Value << " or 0\t\t\nTime: " << std::chrono::duration<double>(end - begin).count() << std::endl;
 	}
 }

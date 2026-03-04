@@ -4,12 +4,12 @@
 #include "FileImpl.h"
 
 IMPLEMENTATION(Directory)
-std::string path;
+	std::string path;
 
-Impl(std::string_view path) : path{ path } {}
+	Impl(std::string_view path) : path{ path } {}
 
-File createFile(std::string_view name)
-{
-	return CONSTRUCTOR(File, path, name);//File{ new File::Impl{ name } };
-}
+	File createFile(std::string_view name)
+	{
+		return CONSTRUCTOR(File, path, name);
+	}
 END;

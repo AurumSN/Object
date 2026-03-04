@@ -11,6 +11,7 @@ struct Object::Container : public Object::BaseContainer
 	template<typename... Args>
 	Container(Args... args) : Impl{ args... }
 	{
+		*const_cast<BaseContainer **>(&Impl.m_pSelf) = this;
 	}
 
 	virtual ~Container()
@@ -70,6 +71,7 @@ struct ThreadSafeObject::Container : public ThreadSafeObject::BaseContainer
 	template<typename... Args>
 	Container(Args... args) : Impl{ args... }
 	{
+		*const_cast<BaseContainer **>(&Impl.m_pSelf) = this;
 	}
 
 	virtual ~Container()
@@ -96,6 +98,7 @@ struct Context::Container : public Context::BaseContainer
 	template<typename... Args>
 	Container(Args... args) : Impl{ args... }
 	{
+		*const_cast<BaseContainer **>(&Impl.m_pSelf) = this;
 	}
 
 	virtual ~Container()

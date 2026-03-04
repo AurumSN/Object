@@ -17,16 +17,25 @@ static constexpr NullObjectType Null;
 
 #define INTERFACE_PRIVATE(NAME, PARENT) using Base = PARENT; \
 using This = NAME; \
+friend class Object; \
+friend class ThreadSafeObject; \
+friend class Context; \
+friend class Static; \
+friend class ThreadSafeStatic; \
 template<class T> friend struct Container;
 #define INTERFACE_PROTECTED(NAME) class Impl; \
-NAME(BaseContainer *pContainer) : Base{ pContainer } {}
+static constexpr bool __AsConstEnabled = Base::__AsConstEnabled; \
+NAME(BaseContainer *pContainer) : Base{ pContainer } {} \
+BaseContainer *Get() { return m_pContainer; } \
+const BaseContainer *Get() const { return m_pContainer; }
 #define INTERFACE_PUBLIC(NAME) using Data = Container<This>; \
 NAME(NullObjectType = Null) : Base{ Null } {} \
-template<class T, std::enable_if_t<std::is_base_of_v<NAME, T>, int> = 0> NAME(const T &other) : Base{ other } {} \
-template<class T, std::enable_if_t<std::is_base_of_v<NAME, T>, int> = 0> NAME(T &&other) noexcept : Base{ std::move(other) } {} \
-template<class T, std::enable_if_t<std::is_base_of_v<NAME, T>, int> = 0> NAME &operator=(const T &other) { Base::operator=(other); return *this; } \
-template<class T, std::enable_if_t<std::is_base_of_v<NAME, T>, int> = 0> NAME &operator=(T &&other) { Base::operator=(std::move(other)); return *this; } \
-template<class T, std::enable_if_t<std::is_base_of_v<NAME, T> || std::is_base_of_v<T, NAME>, int> = 0> T As() const { return Base::As<T>(); }
+template<class T, std::enable_if_t<std::is_base_of_v<NAME, T> && __AsConstEnabled && std::is_same_v<std::decay_t<T>, T>, int> = 0> NAME(const T &other) : Base{ other } {} \
+template<class T, std::enable_if_t<std::is_base_of_v<NAME, T> && std::is_same_v<std::decay_t<T>, T>, int> = 0> NAME(T &&other) noexcept : Base{ std::move(other) } {} \
+template<class T, std::enable_if_t<std::is_base_of_v<NAME, T> && __AsConstEnabled && std::is_same_v<std::decay_t<T>, T>, int> = 0> NAME &operator=(const T &other) { Base::operator=(other); return *this; } \
+template<class T, std::enable_if_t<std::is_base_of_v<NAME, T> && std::is_same_v<std::decay_t<T>, T>, int> = 0> NAME &operator=(T &&other) { Base::operator=(std::move(other)); return *this; } \
+template<class T, std::enable_if_t<(std::is_base_of_v<NAME, T> || std::is_base_of_v<T, NAME>) && __AsConstEnabled, int> = 0> T As() const { return Base::As<T>(); } \
+template<class T, std::enable_if_t<(std::is_base_of_v<NAME, T> || std::is_base_of_v<T, NAME>) && !__AsConstEnabled, int> = 0> T As()  { return Base::As<T>(); }
 
 #define INTERFACE(NAME, PARENT) class NAME : public PARENT \
 { \
@@ -49,16 +58,22 @@ public: \
 #define THREAD_UNSAFE_UNSURE(X) do { if (Holds()) { THREAD_UNSAFE_SURE(X); } } while (0)
 
 #define IMPLEMENTATION(NAME) class NAME::Impl : public Base::Impl \
-{\
+{ \
+	using Interface = NAME; \
 public:
 
 #define IMPLEMENTATION_CONSTRUCTOR(...) This{ new Container<This>{ __VA_ARGS__ } }
 
 #define CONSTRUCTOR(Type, ...) Type{ new Type::Container<Type>{ __VA_ARGS__ } }
 
+#define GET_IMPL(X) (static_cast<std::conditional_t<std::is_const_v<std::remove_reference_t<decltype(X)>>, const std::remove_reference_t<decltype(X)>::Container<std::remove_reference_t<decltype(X)>::This> *, std::remove_reference_t<decltype(X)>::Container<std::remove_reference_t<decltype(X)>::This> *>>(X.m_pContainer)->Get())
+#define SELF (Interface::__AsConstEnabled ? Interface{ const_cast<BaseContainer *>(const_cast<Impl *>(this)->m_pSelf) } : Null)
+
 class Object
 {
 protected:
+	static constexpr bool __AsConstEnabled = true;
+
 	struct BaseContainer
 	{
 		size_t nRefCount;
@@ -73,7 +88,7 @@ protected:
 	template<class T>
 	struct Container;
 
-	class Impl {};
+	class Impl { friend class Object; protected: BaseContainer *const m_pSelf{ nullptr }; };
 
 	BaseContainer *m_pContainer;
 
@@ -112,6 +127,8 @@ T Object::As() const
 class ThreadSafeObject
 {
 protected:
+	static constexpr bool __AsConstEnabled = true;
+
 	struct BaseContainer
 	{
 		size_t nRefCount;
@@ -132,7 +149,7 @@ protected:
 	template<class T>
 	struct Container;
 
-	class Impl {};
+	class Impl { friend class ThreadSafeObject; protected: BaseContainer *const m_pSelf{ nullptr }; };
 
 	BaseContainer *m_pContainer;
 
@@ -173,6 +190,8 @@ class Context
 	Context(const Context &) = delete;
 	Context &operator=(const Context &) = delete;
 protected:
+	static constexpr bool __AsConstEnabled = false;
+
 	struct BaseContainer
 	{
 		BaseContainer();
@@ -182,7 +201,7 @@ protected:
 	template<class T>
 	struct Container;
 
-	class Impl {};
+	class Impl { friend class Context; protected: BaseContainer *const m_pSelf{ nullptr }; };
 
 	BaseContainer *m_pContainer;
 
@@ -202,11 +221,11 @@ public:
 	//operator bool() const;
 
 	template<class T, std::enable_if_t<std::is_base_of_v<Context, T> || std::is_base_of_v<T, Context>, int> = 0>
-	T As() const;
+	T As();
 };
 
 template<class T, std::enable_if_t<std::is_base_of_v<Context, T> || std::is_base_of_v<T, Context>, int>>
-T Context::As() const
+T Context::As()
 {
 	T res = Null;
 	res.m_pContainer = m_pContainer;
@@ -217,12 +236,15 @@ T Context::As() const
 class Static
 {
 protected:
+	static constexpr bool __AsConstEnabled = true;
+
 	struct BaseContainer
 	{
 		BaseContainer();
 		virtual ~BaseContainer();
 	};
-	class Impl {};
+
+	class Impl { friend class Static; protected: BaseContainer *const m_pSelf{ nullptr }; };
 
 	BaseContainer *m_pContainer;
 
@@ -237,6 +259,7 @@ public:
 		template<typename... Args>
 		Container(Args... args) : Impl{ args... }
 		{
+			*const_cast<BaseContainer **>(&Impl.m_pSelf) = this;
 		}
 
 		virtual ~Container()
@@ -283,13 +306,15 @@ T Static::As() const
 class ThreadSafeStatic
 {
 protected:
+	static constexpr bool __AsConstEnabled = true;
+
 	struct BaseContainer
 	{
 		BaseContainer();
 		virtual ~BaseContainer();
 	};
 
-	class Impl {};
+	class Impl { friend class ThreadSafeStatic; protected: BaseContainer *const m_pSelf{ nullptr }; };
 
 	BaseContainer *m_pContainer;
 
@@ -349,6 +374,7 @@ public:
 		template<typename... Args>
 		Container(Args... args) : Impl{ args... }
 		{
+			*const_cast<BaseContainer **>(&Impl.m_pSelf) = this;
 #ifdef _WIN32
 			InitializeCriticalSection(&CriticalSection);
 #elif defined(__unix__)
@@ -407,5 +433,17 @@ T ThreadSafeStatic::As() const
 	res.m_pContainer = m_pContainer;
 	return res;
 }
+
+//template<class T>
+//inline typename T::Interface __Self(T *This)
+//{
+//	if constexpr (T::Interface::__AsConstEnabled) {
+//		return typename T::Interface{ const_cast<typename T::Interface::BaseContainer *>(This->m_pSelf) };
+//	} else {
+//		return Null;
+//	}
+//}
+//
+//#define SELF (__Self(const_cast<Impl *>(this)))
 
 #endif

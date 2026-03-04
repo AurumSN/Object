@@ -1,5 +1,7 @@
 ﻿#include "Object.h"
 
+#include "ObjectPrivate.h"
+
 Object::BaseContainer::BaseContainer() : nRefCount{ 0 }
 {
 }

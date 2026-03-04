@@ -23,13 +23,13 @@ IMPLEMENTATION(WolksVagen)
 END;
 
 IMPLEMENTATION(Audio)
-float au;
+	float au;
 
-Impl(float speed, float weight, float au) : Base::Impl{ speed, weight }, au{ au } {}
+	Impl(float speed, float weight, float au) : Base::Impl{ speed, weight }, au{ au } {}
 END;
 
 IMPLEMENTATION(Airplane)
-float height;
+	float height;
 
-Impl(float speed, float height) : Base::Impl{ speed }, height{ height } {}
+	Impl(float speed, float height) : Base::Impl{ speed }, height{ height } {}
 END;

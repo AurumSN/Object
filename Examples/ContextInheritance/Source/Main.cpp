@@ -21,6 +21,7 @@ int main()
 	lists.push_back(std::move(l1));
 	lists.push_back(std::move(l2));
 	q.execute(lists);
+	lists.clear();
 
 
 	GraphicsCommandList l3 = q.getList().As<GraphicsCommandList>();
@@ -34,7 +35,6 @@ int main()
 	l4.draw("Text");
 	l4.draw("Button");
 
-	lists.clear();
 	lists.push_back(std::move(l3));
 	lists.push_back(std::move(l4));
 	q.execute(lists);

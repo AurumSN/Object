@@ -13,7 +13,7 @@
 #endif
 
 struct NullObjectType {};
-static constexpr NullObjectType Null;
+static constexpr NullObjectType Null{};
 
 #define INTERFACE_PRIVATE(NAME, PARENT) using Base = PARENT; \
 using This = NAME; \
@@ -25,7 +25,7 @@ friend class ThreadSafeStatic; \
 template<class T> friend struct Container;
 #define INTERFACE_PROTECTED(NAME) class Impl; \
 static constexpr bool __AsConstEnabled = Base::__AsConstEnabled; \
-NAME(BaseContainer *pContainer) : Base{ pContainer } {} \
+NAME(BaseContainer *pContainer, __KeyType) : Base{ pContainer, __Key } {} \
 BaseContainer *Get() { return m_pContainer; } \
 const BaseContainer *Get() const { return m_pContainer; }
 #define INTERFACE_PUBLIC(NAME) using Data = Container<This>; \
@@ -50,28 +50,37 @@ public: \
 #define IMPL (static_cast<Container<This> *>(this->m_pContainer)->Get())
 #define SURE(X) (IMPL-> X)
 #define UNSURE_VALUE(X, DEFAULT) (Holds() ? SURE(X) : (DEFAULT))
-#define UNSURE(X) do { if (Holds()) { SURE(X); } } while (0)
+#define UNSURE_EXPRESSION(X, ...) do { if (Holds()) { SURE(X); } } while (0)
+
+#define __UNSURE(X, Arg, Type, ...) UNSURE ## Type (X, Arg)
+#define UNSURE(X, ...) __UNSURE(X __VA_OPT__(,) __VA_ARGS__, _VALUE, _EXPRESSION)
 
 #define THREAD_UNSAFE_IMPL (&static_cast<Container<This> *>(this->m_pContainer)->Impl)
 #define THREAD_UNSAFE_SURE(X) (THREAD_UNSAFE_IMPL-> X)
 #define THREAD_UNSAFE_UNSURE_VALUE(X, DEFAULT) (Holds() ? THREAD_UNSAFE_SURE(X) : (DEFAULT))
-#define THREAD_UNSAFE_UNSURE(X) do { if (Holds()) { THREAD_UNSAFE_SURE(X); } } while (0)
+#define THREAD_UNSAFE_UNSURE_EXPRESSION(X) do { if (Holds()) { THREAD_UNSAFE_SURE(X); } } while (0)
+
+#define __THREAD_UNSAFE_UNSURE(X, Arg, Type, ...) THREAD_UNSAFE_UNSURE ## Type ## (X, Arg)
+#define THREAD_UNSAFE_UNSURE(X, ...) __THREAD_UNSAFE_UNSURE(X __VA_OPT__(,) __VA_ARGS__, _EXPRESSION, _VALUE)
 
 #define IMPLEMENTATION(NAME) class NAME::Impl : public Base::Impl \
 { \
 	using Interface = NAME; \
 public:
 
-#define IMPLEMENTATION_CONSTRUCTOR(...) This{ new Container<This>{ __VA_ARGS__ } }
+#define IMPLEMENTATION_CONSTRUCTOR(...) This{ new Container<This>{ __VA_ARGS__ }, __Key }
 
-#define CONSTRUCTOR(Type, ...) Type{ new Type::Container<Type>{ __VA_ARGS__ } }
+#define CONSTRUCTOR(Type, ...) Type{ new Type::Container<Type>{ __VA_ARGS__ }, Type::__Key }
 
 #define GET_IMPL(X) (static_cast<std::conditional_t<std::is_const_v<std::remove_reference_t<decltype(X)>>, const std::remove_reference_t<decltype(X)>::Container<std::remove_reference_t<decltype(X)>::This> *, std::remove_reference_t<decltype(X)>::Container<std::remove_reference_t<decltype(X)>::This> *>>(X.m_pContainer)->Get())
-#define SELF (Interface::__AsConstEnabled ? Interface{ const_cast<BaseContainer *>(const_cast<Impl *>(this)->m_pSelf) } : Null)
+#define SELF (Interface::__AsConstEnabled ? Interface{ const_cast<BaseContainer *>(const_cast<Impl *>(this)->m_pSelf), Interface::__Key } : Null)
 
 class Object
 {
 protected:
+	struct __KeyType {};
+	static constexpr __KeyType __Key{};
+
 	static constexpr bool __AsConstEnabled = true;
 
 	struct BaseContainer
@@ -92,7 +101,7 @@ protected:
 
 	BaseContainer *m_pContainer;
 
-	Object(BaseContainer *pContainer);
+	Object(BaseContainer *pContainer, __KeyType);
 
 public:
 	Object(NullObjectType = Null);
@@ -127,6 +136,9 @@ T Object::As() const
 class ThreadSafeObject
 {
 protected:
+	struct __KeyType {};
+	static constexpr __KeyType __Key{};
+
 	static constexpr bool __AsConstEnabled = true;
 
 	struct BaseContainer
@@ -153,7 +165,7 @@ protected:
 
 	BaseContainer *m_pContainer;
 
-	ThreadSafeObject(BaseContainer *pContainer);
+	ThreadSafeObject(BaseContainer *pContainer, __KeyType);
 
 public:
 	ThreadSafeObject(NullObjectType = Null);
@@ -190,6 +202,9 @@ class Context
 	Context(const Context &) = delete;
 	Context &operator=(const Context &) = delete;
 protected:
+	struct __KeyType {};
+	static constexpr __KeyType __Key{};
+
 	static constexpr bool __AsConstEnabled = false;
 
 	struct BaseContainer
@@ -205,7 +220,7 @@ protected:
 
 	BaseContainer *m_pContainer;
 
-	Context(BaseContainer *pContainer);
+	Context(BaseContainer *pContainer, __KeyType);
 
 public:
 	Context(NullObjectType = Null);
@@ -236,6 +251,9 @@ T Context::As()
 class Static
 {
 protected:
+	struct __KeyType {};
+	static constexpr __KeyType __Key{};
+
 	static constexpr bool __AsConstEnabled = true;
 
 	struct BaseContainer
@@ -248,7 +266,7 @@ protected:
 
 	BaseContainer *m_pContainer;
 
-	Static(BaseContainer *pContainer);
+	Static(BaseContainer *pContainer, __KeyType);
 
 public:
 	template<class T>
@@ -306,6 +324,9 @@ T Static::As() const
 class ThreadSafeStatic
 {
 protected:
+	struct __KeyType {};
+	static constexpr __KeyType __Key{};
+
 	static constexpr bool __AsConstEnabled = true;
 
 	struct BaseContainer
@@ -318,7 +339,7 @@ protected:
 
 	BaseContainer *m_pContainer;
 
-	ThreadSafeStatic(BaseContainer *pContainer);
+	ThreadSafeStatic(BaseContainer *pContainer, __KeyType);
 
 public:
 	template<class T>
@@ -404,7 +425,7 @@ public:
 
 		T Create()
 		{
-			return T{ this };
+			return T{ this, __Key };
 		}
 	};
 
@@ -433,17 +454,5 @@ T ThreadSafeStatic::As() const
 	res.m_pContainer = m_pContainer;
 	return res;
 }
-
-//template<class T>
-//inline typename T::Interface __Self(T *This)
-//{
-//	if constexpr (T::Interface::__AsConstEnabled) {
-//		return typename T::Interface{ const_cast<typename T::Interface::BaseContainer *>(This->m_pSelf) };
-//	} else {
-//		return Null;
-//	}
-//}
-//
-//#define SELF (__Self(const_cast<Impl *>(this)))
 
 #endif

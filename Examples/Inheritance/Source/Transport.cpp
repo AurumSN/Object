@@ -9,7 +9,7 @@ Transport::Transport(float speed) : IMPLEMENTATION_CONSTRUCTOR(speed)
 
 float Transport::getSpeed() const
 {
-	return UNSURE_VALUE(speed, 0.0f);
+	return UNSURE(speed, 0.0f);
 }
 
 void Transport::setSpeed(float speed)
@@ -24,7 +24,7 @@ Car::Car(float speed, float weight) : IMPLEMENTATION_CONSTRUCTOR(speed, weight)
 
 float Car::getWeight() const
 {
-	return UNSURE_VALUE(weight, 0.0f);
+	return UNSURE(weight, 0.0f);
 }
 
 void Car::setWeight(float weight)
@@ -39,7 +39,7 @@ WolksVagen::WolksVagen(float speed, float weight, float wv) : IMPLEMENTATION_CON
 
 float WolksVagen::getWV() const
 {
-	return UNSURE_VALUE(wv, 0.0f);
+	return UNSURE(wv, 0.0f);
 }
 
 void WolksVagen::setWV(float wv)
@@ -54,7 +54,7 @@ Audio::Audio(float speed, float weight, float au) : IMPLEMENTATION_CONSTRUCTOR(s
 
 float Audio::getAU() const
 {
-	return UNSURE_VALUE(au, 0.0f);
+	return UNSURE(au, 0.0f);
 }
 
 void Audio::setAU(float au)
@@ -69,7 +69,7 @@ Airplane::Airplane(float speed, float height) : IMPLEMENTATION_CONSTRUCTOR(speed
 
 float Airplane::getHeight() const
 {
-	return UNSURE_VALUE(height, 0.0f);
+	return UNSURE(height, 0.0f);
 }
 
 void Airplane::setHeight(float height)

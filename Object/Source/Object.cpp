@@ -21,7 +21,7 @@ bool Object::BaseContainer::Decrement()
 	return nRefCount != 0;
 }
 
-Object::Object(BaseContainer *pContainer) : m_pContainer{ pContainer }
+Object::Object(BaseContainer *pContainer, __KeyType) : m_pContainer{ pContainer }
 {
 	if (m_pContainer) {
 		m_pContainer->Increment();
@@ -32,7 +32,7 @@ Object::Object(NullObjectType) : m_pContainer{ nullptr }
 {
 }
 
-Object::Object(const Object &other) : Object{ other.m_pContainer }
+Object::Object(const Object &other) : Object{ other.m_pContainer, __Key }
 {
 }
 
@@ -145,7 +145,7 @@ bool ThreadSafeObject::BaseContainer::Decrement()
 	return nRefCount != 0; // Can be equal to Zero but have multiple Objects referencing this Container only in case when multiple Threads access the same Object Instance using pointers which is not permitted. Each thread must have their own Instance of the Object.
 }
 
-ThreadSafeObject::ThreadSafeObject(BaseContainer *pContainer) : m_pContainer{ pContainer }
+ThreadSafeObject::ThreadSafeObject(BaseContainer *pContainer, __KeyType) : m_pContainer{ pContainer }
 {
 	if (m_pContainer) {
 		m_pContainer->Increment();
@@ -156,7 +156,7 @@ ThreadSafeObject::ThreadSafeObject(NullObjectType) : m_pContainer{ nullptr }
 {
 }
 
-ThreadSafeObject::ThreadSafeObject(const ThreadSafeObject &other) : ThreadSafeObject{ other.m_pContainer }
+ThreadSafeObject::ThreadSafeObject(const ThreadSafeObject &other) : ThreadSafeObject{ other.m_pContainer, __Key }
 {
 }
 
@@ -228,7 +228,7 @@ Context::BaseContainer::~BaseContainer()
 {
 }
 
-Context::Context(BaseContainer *pContainer) : m_pContainer{ pContainer }
+Context::Context(BaseContainer *pContainer, __KeyType) : m_pContainer{ pContainer }
 {
 }
 
@@ -288,7 +288,7 @@ Static::BaseContainer::~BaseContainer()
 {
 }
 
-Static::Static(BaseContainer *pContainer) : m_pContainer{ pContainer }
+Static::Static(BaseContainer *pContainer, __KeyType) : m_pContainer{ pContainer }
 {
 }
 
@@ -296,7 +296,7 @@ Static::Static(NullObjectType) : m_pContainer{ nullptr }
 {
 }
 
-Static::Static(const Static &other) : Static{ other.m_pContainer }
+Static::Static(const Static &other) : Static{ other.m_pContainer, __Key }
 {
 }
 
@@ -352,7 +352,7 @@ ThreadSafeStatic::BaseContainer::~BaseContainer()
 {
 }
 
-ThreadSafeStatic::ThreadSafeStatic(BaseContainer *pContainer) : m_pContainer{ pContainer }
+ThreadSafeStatic::ThreadSafeStatic(BaseContainer *pContainer, __KeyType) : m_pContainer{ pContainer }
 {
 }
 
@@ -360,7 +360,7 @@ ThreadSafeStatic::ThreadSafeStatic(NullObjectType) : m_pContainer{ nullptr }
 {
 }
 
-ThreadSafeStatic::ThreadSafeStatic(const ThreadSafeStatic &other) : ThreadSafeStatic{ other.m_pContainer }
+ThreadSafeStatic::ThreadSafeStatic(const ThreadSafeStatic &other) : ThreadSafeStatic{ other.m_pContainer, __Key }
 {
 }
 

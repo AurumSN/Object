@@ -12,13 +12,14 @@ IMPLEMENTATION(CommandList)
 	CommandQueue parent;
 	std::vector<std::string> list;
 
-	Impl(const CommandQueue queue, uint8_t idx);
+	Impl(CommandQueue queue, uint8_t idx);
+	~Impl();
 
 	virtual const std::string &name() const;
 END;
 
 IMPLEMENTATION(GraphicsCommandList)
-	Impl(const CommandQueue queue, uint8_t idx);
+	Impl(CommandQueue queue, uint8_t idx);
 
 	void draw(std::string_view object);
 
@@ -26,17 +27,16 @@ IMPLEMENTATION(GraphicsCommandList)
 END;
 
 IMPLEMENTATION(CommandQueue)
-	std::queue<CommandList> lists;
-	uint8_t list_count;
+	std::queue<uint8_t> lists;
 
-	Impl(int type);
+	Impl();
 
 	CommandList getList();
 
-	void execute(std::vector<CommandList> &commandLists);
+	void execute(std::vector<CommandList> &commandLists) const;
 
 //private:
-	CommandList createList();
+	uint8_t createList();
 
-	void returnList(CommandList list);
+	void returnList(uint8_t listId);
 END;

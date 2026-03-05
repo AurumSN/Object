@@ -5,7 +5,7 @@
 const std::string &CommandList::name() const
 {
 	static std::string str = "";
-	return UNSURE_VALUE(name(), str);
+	return UNSURE(name(), str);
 }
 
 void GraphicsCommandList::draw(std::string_view object)
@@ -13,21 +13,27 @@ void GraphicsCommandList::draw(std::string_view object)
 	UNSURE(draw(object));
 }
 
-CommandQueue::CommandQueue(int type) : IMPLEMENTATION_CONSTRUCTOR(type) {}
+CommandQueue::CommandQueue(uint8_t) : IMPLEMENTATION_CONSTRUCTOR() {}
 
 CommandList CommandQueue::getList()
 {
-	return UNSURE_VALUE(getList(), Null);
+	return UNSURE(getList(), Null);
 }
 
-void CommandQueue::execute(std::vector<CommandList> &commandLists)
+void CommandQueue::execute(std::vector<CommandList> &commandLists) const
 {
 	UNSURE(execute(commandLists));
 }
 
 
 
-CommandList::Impl::Impl(const CommandQueue queue, uint8_t idx) : index{ idx }, parent{ queue }, list{} {}
+CommandList::Impl::Impl(CommandQueue queue, uint8_t idx) : index{ idx }, parent{ queue }, list{} {}
+CommandList::Impl::~Impl()
+{
+	if (parent.Holds()) {
+		GET_IMPL(parent)->returnList(index);
+	}
+}
 
 const std::string &CommandList::Impl::name() const
 {
@@ -35,7 +41,7 @@ const std::string &CommandList::Impl::name() const
 	return str;
 }
 
-GraphicsCommandList::Impl::Impl(const CommandQueue queue, uint8_t idx) : Base::Impl{ queue, idx } {}
+GraphicsCommandList::Impl::Impl(CommandQueue queue, uint8_t idx) : Base::Impl{ queue, idx } {}
 
 void GraphicsCommandList::Impl::draw(std::string_view object)
 {
@@ -48,37 +54,39 @@ const std::string &GraphicsCommandList::Impl::name() const
 	return str;
 }
 
-CommandQueue::Impl::Impl(int type) : lists{}, list_count{ 0 } {}
+CommandQueue::Impl::Impl() : lists{} {}
 
 CommandList CommandQueue::Impl::getList()
 {
 	if (lists.empty()) {
-		return createList();
+		return CONSTRUCTOR(GraphicsCommandList, SELF, createList());
 	}
 
-	CommandList list = std::move(lists.front());
+	CommandList list = CONSTRUCTOR(GraphicsCommandList, SELF, lists.front());
 	lists.pop();
 	return list;
 }
 
-void CommandQueue::Impl::execute(std::vector<CommandList> &commandLists)
+void CommandQueue::Impl::execute(std::vector<CommandList> &commandLists) const
 {
 	for (auto &v : commandLists) {
-		std::cout << v.name() << " " << (int)GET_IMPL(v)->index << " :" << std::endl;
-		for (const auto &i : GET_IMPL(v)->list) {
-			std::cout << "\t" << i << std::endl;
+		if (v.Holds()) {
+			std::cout << v.name() << " " << (int)GET_IMPL(v)->index << " :" << std::endl;
+			for (const auto &i : GET_IMPL(v)->list) {
+				std::cout << "\t" << i << std::endl;
+			}
+			std::cout << std::endl;
 		}
-		std::cout << std::endl;
-		returnList(std::move(v));
 	}
 }
 
-CommandList CommandQueue::Impl::createList()
+uint8_t CommandQueue::Impl::createList()
 {
-	return CONSTRUCTOR(GraphicsCommandList, SELF, list_count++);
+	static uint8_t value = 0;
+	return value++;
 }
 
-void CommandQueue::Impl::returnList(CommandList list)
+void CommandQueue::Impl::returnList(uint8_t listId)
 {
-	lists.push(std::move(list));
+	lists.push(listId);
 }
